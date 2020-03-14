@@ -27,10 +27,11 @@
 
 #define MOUSE_TIMEOUT_MS 1000
 
-//#define DEBUG_OPENGL
+#define DEBUG_OPENGL
 
 static const char *shader_vert_glsl = R"glsl(
-#version 150 core
+#version 310 es
+precision mediump float;
 
 in vec2 pos_attr;
 
@@ -44,7 +45,8 @@ void main()
 )glsl";
 
 static const char *shader_frag_glsl = R"glsl(
-#version 150 core
+#version 310 es
+precision mediump float;
 
 uniform sampler2D tex_y;
 uniform sampler2D tex_u;
@@ -81,8 +83,10 @@ QSurfaceFormat AVOpenGLWidget::CreateSurfaceFormat()
 	QSurfaceFormat format;
 	format.setDepthBufferSize(0);
 	format.setStencilBufferSize(0);
-	format.setVersion(3, 2);
-	format.setProfile(QSurfaceFormat::CoreProfile);
+	format.setVersion(3, 1);
+	format.setRenderableType(QSurfaceFormat::OpenGLES);
+
+	//format.setProfile(QSurfaceFormat::CoreProfile);
 #ifdef DEBUG_OPENGL
 	format.setOption(QSurfaceFormat::DebugContext, true);
 #endif
@@ -198,6 +202,7 @@ bool AVOpenGLFrame::Update(AVFrame *frame, ChiakiLog *log)
 
 void AVOpenGLWidget::initializeGL()
 {
+	printf("Is context GLES? %s\n", context()->isOpenGLES() ? "yes" : "no");
 	auto f = QOpenGLContext::currentContext()->extraFunctions();
 
 	const char *gl_version = (const char *)f->glGetString(GL_VERSION);

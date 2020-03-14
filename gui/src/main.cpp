@@ -68,6 +68,7 @@ int real_main(int argc, char *argv[])
 	}
 
 	QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+	QApplication::setAttribute(Qt::AA_UseOpenGLES);
 	QSurfaceFormat::setDefaultFormat(AVOpenGLWidget::CreateSurfaceFormat());
 
 	QApplication app(argc, argv);

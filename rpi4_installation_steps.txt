@@ -1,0 +1,23 @@
+#install prereqs
+sudo apt-get install cmake libqt5opengl5-dev libqt5svg5-dev libqt5multimedia5 qtmultimedia5-dev libavcodec-dev libopus-dev libssl-dev libprotoc-dev protobuf-compiler python3-protobuf libsdl2-dev libswscale-dev
+sudo ldconfig
+
+#obtain and build chiaki
+cd ~/
+git clone https://github.com/founta/chiaki.git
+cd chiaki
+git submodule update --init
+mkdir build && cd build
+cmake ..
+make
+
+#start program
+./gui/chiaki
+
+#register ps4
+
+#start stream
+
+#this opengl error pops up repeatedly and 
+#stream window is not rendered:
+# QEGLPlatformContext: eglMakeCurrent failed: 3002
