@@ -25,9 +25,28 @@
 #include <QThread>
 #include <QTimer>
 
+#include <QSurface>
+#include <QWindow>
+
 #define MOUSE_TIMEOUT_MS 1000
 
 #define DEBUG_OPENGL
+
+constexpr char const* colorSpace[] = {"DefaultColorSpace", "sRGBColorSpace"};
+constexpr char const* renderableType[] = { "DefaultRenderableType", "OpenGL", "OpenGLES", "OpenVG" };
+constexpr char const* swapBehavior[] =  { "DefaultSwapBehavior", "SingleBuffer", "DoubleBuffer", "TripleBuffer" };
+static void print_format(const QSurfaceFormat &format)
+{
+	auto version = format.version();
+	int renderable_type = (int) format.renderableType();
+	int color_space = (int) format.colorSpace();
+	int swap_behavior = (int) format.swapBehavior();
+	printf("version: %d.%d\n", version.first, version.second);
+	printf("color space: %s\n"
+		   "renderable type: %s\n"
+		   "swap behavior: %s\n", colorSpace[color_space], renderableType[renderable_type],
+		   swapBehavior[swap_behavior]);
+}
 
 static const char *shader_vert_glsl = R"glsl(
 #version 310 es
@@ -93,12 +112,15 @@ QSurfaceFormat AVOpenGLWidget::CreateSurfaceFormat()
 	return format;
 }
 
+
 AVOpenGLWidget::AVOpenGLWidget(VideoDecoder *decoder, QWidget *parent)
 	: QOpenGLWidget(parent),
 	decoder(decoder)
 {
+	printf("window: %p\n", window());
+	printf("windowhandle: %p\n", window()->windowHandle());
+	//setFormat(window()->windowHandle()->format());//CreateSurfaceFormat());
 	setFormat(CreateSurfaceFormat());
-
 	frame_uploader_context = nullptr;
 	frame_uploader = nullptr;
 	frame_uploader_thread = nullptr;
@@ -203,6 +225,21 @@ bool AVOpenGLFrame::Update(AVFrame *frame, ChiakiLog *log)
 void AVOpenGLWidget::initializeGL()
 {
 	printf("Is context GLES? %s\n", context()->isOpenGLES() ? "yes" : "no");
+	printf("Does surface support openGL? %s\n", context()->surface()->supportsOpenGL() ? "yes" : "no");
+	printf("Surface type: %d\n", (int)context()->surface()->surfaceType());
+	printf("Surface class: %d\n", (int)context()->surface()->surfaceClass());
+	printf("Window handle: %p\n", windowHandle());
+	printf("windowhandle??: %p\n", window()->windowHandle());
+	printf("context: %p\n", context());
+	printf("context valid? %d\n", context()->isValid());
+	printf("\nrequested format:\n");
+	print_format(window()->windowHandle()->requestedFormat());
+	printf("\ncontext format: \n");
+	print_format(context()->format());
+	printf("\nsurface format: \n");
+	print_format(context()->surface()->format());
+	printf("\ndefault format: \n");
+	print_format(QSurfaceFormat::defaultFormat());
 	auto f = QOpenGLContext::currentContext()->extraFunctions();
 
 	const char *gl_version = (const char *)f->glGetString(GL_VERSION);
