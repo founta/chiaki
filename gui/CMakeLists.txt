@@ -50,6 +50,8 @@ add_executable(chiaki WIN32
 		src/sessionlog.cpp
 		include/avopenglwidget.h
 		src/avopenglwidget.cpp
+		include/avframetopipe.h
+		src/avframetopipe.cpp
 		include/avopenglframeuploader.h
 		src/avopenglframeuploader.cpp
 		include/servericonwidget.h

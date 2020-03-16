@@ -32,7 +32,8 @@ StreamWindow::StreamWindow(const StreamSessionConnectInfo &connect_info, QWidget
 	setWindowTitle(qApp->applicationName() + " | Stream");
 		
 	session = nullptr;
-	av_widget = nullptr;
+	av_pipe = nullptr;
+	av_pipe_thread = nullptr;
 
 	try
 	{
@@ -47,8 +48,13 @@ StreamWindow::StreamWindow(const StreamSessionConnectInfo &connect_info, QWidget
 
 StreamWindow::~StreamWindow()
 {
-	// make sure av_widget is always deleted before the session
-	delete av_widget;
+	if(av_pipe_thread)
+	{
+		av_pipe_thread->quit();
+		av_pipe_thread->wait();
+		delete av_pipe_thread;
+	}
+	if (av_pipe) delete av_pipe;
 }
 
 void StreamWindow::Init(const StreamSessionConnectInfo &connect_info)
@@ -58,10 +64,14 @@ void StreamWindow::Init(const StreamSessionConnectInfo &connect_info)
 	connect(session, &StreamSession::SessionQuit, this, &StreamWindow::SessionQuit);
 	connect(session, &StreamSession::LoginPINRequested, this, &StreamWindow::LoginPINRequested);
 
-	av_widget = new AVOpenGLWidget(session->GetVideoDecoder(), this);
-	setCentralWidget(av_widget);
+	av_pipe = new AVFrameToPipe(session->GetVideoDecoder());
+	av_pipe_thread = new QThread(this);
+	av_pipe_thread->setObjectName("Pipe Writer");
+	av_pipe->moveToThread(av_pipe_thread);
+	av_pipe_thread->start();
+	//setCentralWidget(av_widget);
 
-	grabKeyboard();
+	//grabKeyboard();
 
 	session->Start();
 
@@ -70,8 +80,8 @@ void StreamWindow::Init(const StreamSessionConnectInfo &connect_info)
 	addAction(fullscreen_action);
 	connect(fullscreen_action, &QAction::triggered, this, &StreamWindow::ToggleFullscreen);
 
-	resize(connect_info.video_profile.width, connect_info.video_profile.height);
-	show();
+	//resize(connect_info.video_profile.width, connect_info.video_profile.height);
+	//show();
 }
 
 void StreamWindow::keyPressEvent(QKeyEvent *event)
@@ -142,7 +152,7 @@ void StreamWindow::ToggleFullscreen()
 	else
 	{
 		showFullScreen();
-		if(av_widget)
-			av_widget->HideMouse();
+		//if(av_widget)
+		//	av_widget->HideMouse();
 	}
 }
